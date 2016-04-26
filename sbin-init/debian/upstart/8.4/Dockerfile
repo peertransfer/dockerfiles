@@ -3,7 +3,7 @@ FROM debian:8.4
 # stoled from https://github.com/tianon/dockerfiles
 
 # we're going to want this bad boy installed so we can connect :)
-RUN apt-get update && apt-get install -y ssh locales
+RUN apt-get update && apt-get install -y ssh locales upstart systemd-shim systemd-sysv- --yes --no-install-recommends
 
 ADD init-fake.conf /etc/init/fake-container-events.conf
 
