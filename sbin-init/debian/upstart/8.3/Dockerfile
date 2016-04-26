@@ -3,9 +3,11 @@ FROM debian:8.3
 # stoled from https://github.com/tianon/dockerfiles
 
 # we're going to want this bad boy installed so we can connect :)
-RUN apt-get update && apt-get install -y ssh
+RUN apt-get update && apt-get install -y ssh locales
 
 ADD init-fake.conf /etc/init/fake-container-events.conf
+
+RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
 
 # undo some leet hax of the base image
 RUN rm /usr/sbin/policy-rc.d; \
