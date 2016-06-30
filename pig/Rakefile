@@ -69,5 +69,5 @@ task :build => [:create] do
 end
 
 task :deploy do
-  sh "sudo docker push #{ ENV['hub_name'] }/pig"
+  sh "docker push #{ ENV['hub_name'] }/pig"
 end
