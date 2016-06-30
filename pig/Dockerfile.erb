@@ -1,0 +1,7 @@
+FROM <%= base_image %>
+MAINTAINER Jose Luis Salas
+
+RUN curl -LO <%= pig_mirror %>/dist/pig/pig-<%= pig_version %>/pig-<%= pig_version %>.tar.gz
+RUN tar xzf pig-<%= pig_version %>.tar.gz
+
+ENV PATH $PATH:/pig-<%= pig_version %>/bin:/usr/local/hadoop/bin

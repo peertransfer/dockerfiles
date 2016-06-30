@@ -1,0 +1,73 @@
+require 'erb'
+require 'yaml'
+require 'fileutils'
+
+task default: :create
+
+default_base_image = 'sequenceiq/hadoop-docker:2.5.2'
+default_mirror = 'http://www-eu.apache.org'
+default_pig_version = '0.16.0'
+
+pig_version = nil
+base_image = nil
+pig_mirror = nil
+
+task :config do
+  if config = ENV.has_key?('file') ? YAML.load(File.read(ENV['file'])) : nil
+    pig_version = config['pig_version'] || default_pig_version
+    base_image = config['base_image'] || default_base_image
+    pig_mirror = config['pig_mirror'] || default_mirror
+
+    next unless config.empty?
+  end
+
+  pig_version = ENV['pig_version']
+  base_image = ENV['base_image']
+  pig_mirror = ENV['pig_mirror']
+
+  unless pig_version
+    print "Enter pig version: [#{default_pig_version}]"
+    pig_version = STDIN.gets.chomp
+    pig_version = default_pig_version if pig_version.empty?
+  end
+
+  unless base_image
+    print "Enter base docker image: [#{default_base_image}]"
+    base_image = STDIN.gets.chomp
+    base_image = default_base_image if base_image.empty?
+  end
+
+  unless pig_mirror
+    print "Enter pig mirror: [#{default_mirror}]"
+    pig_mirror = STDIN.gets.chomp
+    pig_mirror = default_mirror if pig_mirror.empty?
+  end
+end
+
+task :create => [:config, :compile_docker] do
+  FileUtils.mkdir(pig_version)
+  FileUtils.mv('Dockerfile', pig_version)
+end
+
+task :compile_docker do
+  build_opts = OpenStruct.new(
+    pig_version: pig_version,
+    base_image: base_image,
+    pig_mirror: pig_mirror
+  )
+
+  dockerfile = ERB.new(File.read("./Dockerfile.erb"))
+               .result(build_opts.instance_eval { binding })
+
+  File.open('Dockerfile', 'w') do |file|
+    file.write(dockerfile)
+  end
+end
+
+task :build => [:create] do
+  sh "cd #{ pig_version }/ && docker build -t #{ ENV['hub_name'] }/pig:#{ pig_version } ."
+end
+
+task :deploy do
+  sh "sudo docker push #{ ENV['hub_name'] }/pig"
+end
